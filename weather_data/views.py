@@ -1,7 +1,7 @@
 from rest_framework import generics, mixins
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.shortcuts import get_object_or_404
+from django.db.models import Avg, Sum, Max
 from .models import WeatherData
 from .serializers import WeatherDataSerializer
 
@@ -38,3 +38,21 @@ class WeatherDataByLocationAPIView(APIView):
         weather_data = WeatherData.objects.filter(location_id=location_id)
         serializer = WeatherDataSerializer(weather_data, many=True)
         return Response(serializer.data)
+
+class TemperatureAverageAPIView(APIView):
+    def get(self, request):
+        result = WeatherData.objects.aggregate(avg_temp=Avg('temperature'))
+        avg_temp = result['avg_temp']
+        return Response({"average_temperature": avg_temp})
+
+class PrecipitationSumAPIView(APIView):
+    def get(self, request):
+        result = WeatherData.objects.aggregate(total_precip=Sum('precipitation'))
+        total_precip = result['total_precip']
+        return Response({"total_precipitation": total_precip})
+
+class WindSpeedMaxAPIView(APIView):
+    def get(self, request):
+        result = WeatherData.objects.aggregate(max_speed=Max('wind_speed'))
+        max_speed = result['max_speed']
+        return Response({"max_wind_speed": max_speed})
